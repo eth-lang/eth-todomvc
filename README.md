@@ -1,6 +1,6 @@
 # eth-re • [TodoMVC](http://todomvc.com)
 
-> Eth interface to Facebook's React
+> Eth lang interface to Facebook's React
 
 ## Resources
 
