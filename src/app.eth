@@ -1,71 +1,74 @@
-(package todomvc ()
+let(appState require("eth-re").appState)
+let(createComponent require("eth-re").createComponent)
+let(createAppState require("eth-re").createAppState)
+let(mount require("eth-re").mount)
 
-(import eth/core (..))
-(import eth-re (app-state-update! create-component create-app-state mount))
+let(KEY_ENTER "Enter")
 
-(set KEY-ENTER "Enter")
+// actions
 
-; actions
+let(addTodo fn(appState title
+  appStateUpdate(appState [:todos] fn(todos
+    append({:title title :state :active} todos)
+  ))
+))
 
-(def add-todo (app-state title)
-  (app-state-update! app-state ["todos"] (fn (todos)
-    (append {:title title :state :active} todos))))
+// selectors
 
-; selectors
+let(selectVisibleTodos fn(currentFilter todos
+  cond(
+    currentFilter filter(fn(t ==(t.state currentFilter)) todos)
+    :else todos
+  )
+))
 
-(def select-visible-todos (current-filter todos)
-  (if (not current-filter)
-    todos
-    (filter (fn (t) (== t.state current-filter)) todos)))
+// components
 
-; components
+let(todo createComponent(fn(s properties
+  [:div {:className "todo"}
+    [:span {} properties.title]]
+)))
 
-(set todo (create-component {
-  name "todo"
-  render (fn (s props)
-    [:div {:class-name "todo"}
-      [:span () props.title]])}))
+let(todos createComponent(fn(state p {
+  let(filteredTodos selectVisibleTodos(p.currentFilter p.todos))
+  [:div {:className "todos"} map(fn(t [todo {:todo t}]) filteredTodos)]
+})))
 
-(set todos (create-component {
-  name "todos"
-  render (fn (s props)
-    (let ((filtered-todos (select-visible-todos props.current-filter props.todos)))
-      [:div {:class-name "todos"}
-        (map (fn (t) [todo {:todo t}]) filtered-todos)]))}))
-
-(set todo-input (create-component {
-  name "todo-input"
-  initial-state {:title ""}
-  render (fn (s props state instance)
-    (let ((on-change (fn (e)
-            (instance.set-state {:title e.target.value})))
-          (on-keydown (fn (e)
-            (if (== e.key KEY-ENTER)
-              (do
-                (add-todo state.title)
-                (instance.set-state {:title ""}))
-              ()))))
-      [:input {
+let(todoInput createComponent({
+  :initialState {:title ""}
+  :render fn(s p state instance {
+    let(onChange fn(e instance.setState({:title e.target.value})))
+    let(onKeydown fn(e
+      if(==(e.key KEY_ENTER) {
+        addTodo(s state.title)
+        instance.setState({:title ""})
+      })
+    ))
+    [:input
+      {
         :type "text"
         :value state.title
-        :on-change on-change
-        :on-keydown on-keydown}]))}))
+        :onChange onChange
+        :onKeydown onKeydown
+      }
+    ]
+  })
+}))
 
-(set todo-app (create-component {
-  name "todo-app"
-  render (fn (s props)
-    (let ((current-filter s.state.current-filter)
-          (todos s.state.todos))
-      [:div () [
-        [todo-input]
-        [todos {:current-filter current-filter :todos todos}]]]))}))
+let(todoApp createComponent(fn(s properties {
+  let(currentFilter s.state.currentFilter)
+  let(todos s.state.todos)
+  [:div {} [
+    [todo-input]
+    [todos {:currentFilter currentFilter :todos todos}]
+  ]]
+})))
 
-; app
+// app
 
-(set app-state (create-app-state {
-  :current-filter null
-  :todos []}))
+let(appState createAppState({
+  :currentFilter null
+  :todos []
+}))
 
-(mount [todo-app] app-state (document.get-element-by-id "app-root"))
-
-)
+mount([todoApp] document.getElementById("app-root") appState)
