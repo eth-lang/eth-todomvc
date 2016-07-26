@@ -24,44 +24,58 @@ let(selectVisibleTodos fn(currentFilter todos
 
 // components
 
-let(todo createComponent(fn(s properties
+let(Todo createComponent(fn(s properties
   [:div {:className "todo"}
     [:span {} properties.title]]
 )))
 
-let(todos createComponent(fn(state p {
+let(Todos createComponent(fn(state p {
   let(filteredTodos selectVisibleTodos(p.currentFilter p.todos))
-  [:div {:className "todos"} map(fn(t [todo {:todo t}]) filteredTodos)]
+  [:section {:className "main"}
+    [:input {:className "toggle-all" :type "checkbox"}]
+    [:label {:for "toggle-all"} "Mark all as complete"]
+    [:ul {:className "todo-list"}
+      map(fn(t [Todo {:todo t}]) filteredTodos)
+    ]
+  ]
 })))
 
-let(todoInput createComponent({
+let(TodoInput createComponent({
   :initialState {:title ""}
   :render fn(s p state instance {
     let(onChange fn(e instance.setState({:title e.target.value})))
-    let(onKeydown fn(e
+    let(onKeyDown fn(e
       if(==(e.key KEY_ENTER) {
         addTodo(s state.title)
         instance.setState({:title ""})
       })
     ))
-    [:input
-      {
+    [:input {
+        :className "new-todo"
+        :placeholder "What needs to be done?"
+        :autoFocus true
         :type "text"
         :value state.title
         :onChange onChange
-        :onKeydown onKeydown
-      }
-    ]
+        :onKeyDown onKeyDown
+    }]
   })
 }))
 
-let(todoApp createComponent(fn(s properties {
+let(TodoHeader createComponent(fn(s properties
+  [:header {:className "header"}
+    [:h1 "todos"]
+    [TodoInput]
+  ]
+)))
+
+let(TodoApp createComponent(fn(s properties {
   let(currentFilter s.state.currentFilter)
   let(todos s.state.todos)
-  [:div {} [
-    [todo-input]
-    [todos {:currentFilter currentFilter :todos todos}]
-  ]]
+  [:section {:className "todoapp"}
+    [TodoHeader]
+    if(not(isEmpty(todos)) [Todos {:currentFilter currentFilter :todos todos}] null)
+  ]
 })))
 
 // app
@@ -71,4 +85,4 @@ let(appState createAppState({
   :todos []
 }))
 
-mount([todoApp] document.getElementById("app-root") appState)
+mount([TodoApp] document.getElementById("app-root") appState)
