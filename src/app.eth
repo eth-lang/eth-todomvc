@@ -24,16 +24,23 @@ let(selectVisibleTodos fn(currentFilter todos
 
 // components
 
-let(Todo createComponent(fn(s properties
-  [:div {:className "todo"}
-    [:span {} properties.title]]
-)))
+let(Todo createComponent(fn(s properties {
+  let(t properties.todo)
+  [:li {:className if(t.completed "completed" "")}
+    [:input {:className "toggle" :type "checkbox" :checked t.completed}]
+    [:div {:className "view"}
+      [:label t.title]
+      [:button {:className "destroy"}]
+    ]
+    [:input {:className "edit" :value t.title}]
+  ]
+})))
 
 let(Todos createComponent(fn(state p {
   let(filteredTodos selectVisibleTodos(p.currentFilter p.todos))
   [:section {:className "main"}
     [:input {:className "toggle-all" :type "checkbox"}]
-    [:label {:for "toggle-all"} "Mark all as complete"]
+    [:label {:htmlFor "toggle-all"} "Mark all as complete"]
     [:ul {:className "todo-list"}
       map(fn(t [Todo {:todo t}]) filteredTodos)
     ]
@@ -82,7 +89,7 @@ let(TodoApp createComponent(fn(s properties {
 
 let(appState createAppState({
   :currentFilter null
-  :todos []
+  :todos [{:title "asd"}]
 }))
 
 mount([TodoApp] document.getElementById("app-root") appState)
